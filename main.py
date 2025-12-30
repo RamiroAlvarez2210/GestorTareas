@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QApplication
 from views.login_view import LoginWindow
 from views.dashboard_view import MainWindow
 
+from views.options_view import OptionsWindow
+
 def main():
     app = QApplication(sys.argv)
     
@@ -14,7 +16,7 @@ def main():
     login = LoginWindow()
     if login.exec_() == login.Accepted:
         # 2. Si el login es correcto, mostrar Dashboard
-        window = MainWindow()
+        window = OptionsWindow() #MainWindow()
         window.show()
         sys.exit(app.exec_())
     else:
