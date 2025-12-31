@@ -4,6 +4,8 @@ from PyQt5.QtCore import Qt
 from views.dashboard_view import MainWindow as TasksWidget # Reutilizamos tu tabla
 # Importar otras vistas cuando las tengas (Usuarios, Ingresos, etc.)
 
+from views.ingresos_view import IngresosWidget
+
 class MainSystemWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -49,15 +51,18 @@ class MainSystemWindow(QMainWindow):
         sidebar_layout.setAlignment(Qt.AlignTop)
 
         # Botones del Sidebar
+        # Botones del Sidebar actualizados
         self.btn_tasks = QPushButton("📋 Tareas Pendientes")
         self.btn_users = QPushButton("👥 Gestión Usuarios")
         self.btn_daily = QPushButton("📅 Tareas Diarias")
-        self.btn_money = QPushButton("💰 Ingresos")
+        # Cambiado: Icono de caja/entrega para Asignaciones
+        self.btn_asignaciones = QPushButton("📦 Asignaciones / Ingresos")
         
         sidebar_layout.addWidget(self.btn_tasks)
         sidebar_layout.addWidget(self.btn_users)
         sidebar_layout.addWidget(self.btn_daily)
-        sidebar_layout.addWidget(self.btn_money)
+        #sidebar_layout.addWidget(self.btn_money)
+        sidebar_layout.addWidget(self.btn_asignaciones)
         
         main_layout.addWidget(self.sidebar)
 
@@ -71,7 +76,9 @@ class MainSystemWindow(QMainWindow):
         # Conectar botones a la lógica de cambio
         self.btn_tasks.clicked.connect(lambda: self.content_stack.setCurrentIndex(0))
         self.btn_users.clicked.connect(lambda: self.content_stack.setCurrentIndex(1))
-        #self.btn_daily.clicked.connect(lambda: self.content_stack.setCurrentIndex(2))
+        self.btn_daily.clicked.connect(lambda: self.content_stack.setCurrentIndex(2))
+        #self.btn_money.clicked.connect(lambda: self.content_stack.setCurrentIndex(3))
+        self.btn_asignaciones.clicked.connect(lambda: self.content_stack.setCurrentIndex(3))
         # ... añadir los demás
 
     def setup_pages(self):
@@ -89,6 +96,15 @@ class MainSystemWindow(QMainWindow):
         self.page_daily = QLabel("Sección de Tareas Diarias (Pendiente)")
         self.page_daily.setAlignment(Qt.AlignCenter)
         self.content_stack.addWidget(self.page_daily)
+
+        # Página 3: Ingresos
+        self.page_ingresos = IngresosWidget()
+        self.content_stack.addWidget(self.page_ingresos)
+        
+        # Página 4: Placeholder para Asignaciones
+        self.page_asignaciones = QLabel("Sección de Asignaciones (Pendiente)")
+        self.page_asignaciones.setAlignment(Qt.AlignCenter)
+        self.content_stack.addWidget(self.page_asignaciones)
 
 # Para ejecutar
 if __name__ == "__main__":
