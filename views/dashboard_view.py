@@ -5,44 +5,56 @@ from PyQt5.QtCore import Qt, QEvent
 from views.detail_view import TaskDetailWindow
 from models.task_data import get_mock_data, crear_tarea_vacia
 
-class MainWindow(QMainWindow):
+from services.api_service import TaskAPIClient
+
+class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Sistema de Gestión de Tareas")
-        self.resize(900, 600)
-        self.tasks = get_mock_data()
+        # Inicializamos el cliente de la API
+        self.api = TaskAPIClient("http://localhost:5240/api")
+        self.tasks = []
         self.init_ui()
+        self.refresh_data() # Carga inicial
 
     def init_ui(self):
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
-
-        # ... (Mantener Toolbar igual) ...
-        top_bar = QHBoxLayout()
-        top_bar.addWidget(QLabel("<b>Listado de Tareas Pendientes</b>"))
-        top_bar.addStretch()
-        self.sort_combo = QComboBox()
-        self.sort_combo.addItems(["Prioridad (Mayor a Menor)", "Fecha Actualización", "Estado"])
-        top_bar.addWidget(self.sort_combo)
-        layout.addLayout(top_bar)
-
+        layout = QVBoxLayout()
+        
         # Configuración de la Tabla
         self.table = QTableWidget()
-        self.table.verticalHeader().setVisible(False)
-        columns = ["ID", "Título", "Estado", "Prioridad", "Solicitante", "Última Actualización"]
-        self.table.setColumnCount(len(columns))
-        self.table.setHorizontalHeaderLabels(columns)
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels(["ID", "Título", "Estado", "Prioridad", "Solicitante", "Actualización"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        
+        # Instalar filtro de eventos para capturar clics
+        self.table.viewport().installEventFilter(self)
+        
+        layout.addWidget(self.table)
+        self.setLayout(layout)
 
+    def refresh_data(self):
+        """Llama a la API y refresca la tabla"""
+        # En una app real, esto debería ir en un QThread para no congelar la UI
+        self.tasks = self.api.obtener_tareas()
+        self.load_data()
+
+    '''def load_data(self):
+        self.table.setRowCount(0)
+        for row, task in enumerate(self.tasks):
+            self.table.insertRow(row)
+            self.table.setItem(row, 0, QTableWidgetItem(str(task.id)))
+            self.table.setItem(row, 1, QTableWidgetItem(task.titulo))
+            self.table.setItem(row, 2, QTableWidgetItem(task.estado))
+            self.table.setItem(row, 3, QTableWidgetItem(task.prioridad))
+            self.table.setItem(row, 4, QTableWidgetItem(task.usuario_solicitante))
+            self.table.setItem(row, 5, QTableWidgetItem(task.ultima_actualizacion.strftime("%d/%m/%Y %H:%M")))
         # --- SOLUCIÓN: INSTALAR FILTRO DE EVENTOS ---
         # Esto permite que la ventana capture los clics que ocurren DENTRO de la tabla
         self.table.viewport().installEventFilter(self)
 
         layout.addWidget(self.table)
-        self.load_data()
+        self.load_data()'''
 
     def eventFilter(self, source, event):
         # Verificamos si el evento es un doble clic en el área de contenido de la tabla

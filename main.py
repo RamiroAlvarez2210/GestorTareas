@@ -6,6 +6,9 @@ from views.dashboard_view import MainWindow
 
 from views.options_view import OptionsWindow
 
+from main_dashboard import MainSystemWindow
+
+
 def main():
     app = QApplication(sys.argv)
     
@@ -16,7 +19,7 @@ def main():
     login = LoginWindow()
     if login.exec_() == login.Accepted:
         # 2. Si el login es correcto, mostrar Dashboard
-        window = OptionsWindow() #MainWindow()
+        window = MainSystemWindow() #OptionsWindow() #MainWindow()
         window.show()
         sys.exit(app.exec_())
     else:

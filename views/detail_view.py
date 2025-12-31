@@ -1,7 +1,7 @@
 # views/detail_view.py
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, QFormLayout, 
                              QLineEdit, QComboBox, QTextEdit, QPushButton, QTableWidget, 
-                             QTableWidgetItem, QHBoxLayout, QLabel)
+                             QTableWidgetItem, QHBoxLayout, QMessageBox)
 from PyQt5.QtCore import Qt
 from datetime import datetime
 
@@ -106,3 +106,19 @@ class TaskDetailWindow(QDialog):
             self.table_movs.setItem(row, 1, QTableWidgetItem("Usuario Actual"))
             self.table_movs.setItem(row, 2, QTableWidgetItem(texto))
             self.txt_new_mov.clear()
+    def guardar_cambios(self):
+        # Recolectar datos de los campos de la interfaz
+        datos_actualizados = {
+            "titulo": self.txt_titulo.text(),
+            "estado": self.cmb_estado.currentText(),
+            "prioridad": self.cmb_prioridad.currentText(),
+            "descripcion": self.txt_desc.toPlainText()
+        }
+        
+        # Llamar a la API (puedes pasar el cliente API desde el padre)
+        exito = self.parent().api.actualizar_tarea(self.tarea.id, datos_actualizados)
+        
+        if exito:
+            self.accept() # Cierra y refresca
+        else:
+            QMessageBox.critical(self, "Error", "No se pudo actualizar en el servidor")
