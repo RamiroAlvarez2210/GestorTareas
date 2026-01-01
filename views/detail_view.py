@@ -1,7 +1,8 @@
 # views/detail_view.py
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QTabWidget, QWidget, QFormLayout, 
                              QLineEdit, QComboBox, QTextEdit, QPushButton, QTableWidget, 
-                             QTableWidgetItem, QHBoxLayout, QMessageBox)
+                             QTableWidgetItem, QHBoxLayout, QMessageBox,
+                             QHeaderView)
 from PyQt5.QtCore import Qt
 from datetime import datetime
 
@@ -9,7 +10,7 @@ class TaskDetailWindow(QDialog):
     def __init__(self, tarea, parent=None):
         super().__init__(parent)
         self.tarea = tarea
-        self.setWindowTitle(f"Detalle de Tarea #{self.tarea.id}")
+        self.setWindowTitle(f"Detalle de Tarea #{self.tarea.ticket}")
         self.resize(600, 500)
         self.init_ui()
 
@@ -73,6 +74,8 @@ class TaskDetailWindow(QDialog):
         self.table_movs = QTableWidget()
         self.table_movs.setColumnCount(3)
         self.table_movs.setHorizontalHeaderLabels(["Fecha", "Usuario", "Movimiento"])
+        self.table_movs.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) # Ajusta columnas en la tabla
+        #self.table_movs.verticalHeader().setVisible(False)
         self.load_movements()
         
         # Sección para agregar nuevo movimiento

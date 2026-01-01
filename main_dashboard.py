@@ -6,6 +6,9 @@ from views.dashboard_view import MainWindow as TasksWidget # Reutilizamos tu tab
 
 from views.ingresos_view import IngresosWidget
 
+from views.task_creation_view import TaskCreationWindow
+
+
 class MainSystemWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -57,12 +60,15 @@ class MainSystemWindow(QMainWindow):
         self.btn_daily = QPushButton("📅 Tareas Diarias")
         # Cambiado: Icono de caja/entrega para Asignaciones
         self.btn_asignaciones = QPushButton("📦 Asignaciones / Ingresos")
+        self.btn_new_task = QPushButton("➕ NUEVA TAREA")
         
         sidebar_layout.addWidget(self.btn_tasks)
         sidebar_layout.addWidget(self.btn_users)
         sidebar_layout.addWidget(self.btn_daily)
         #sidebar_layout.addWidget(self.btn_money)
         sidebar_layout.addWidget(self.btn_asignaciones)
+        sidebar_layout.addWidget(self.btn_new_task)
+        
         
         main_layout.addWidget(self.sidebar)
 
@@ -79,6 +85,7 @@ class MainSystemWindow(QMainWindow):
         self.btn_daily.clicked.connect(lambda: self.content_stack.setCurrentIndex(2))
         #self.btn_money.clicked.connect(lambda: self.content_stack.setCurrentIndex(3))
         self.btn_asignaciones.clicked.connect(lambda: self.content_stack.setCurrentIndex(3))
+        self.btn_new_task.clicked.connect(self.mostrar_creador_tareas)
         # ... añadir los demás
 
     def setup_pages(self):
@@ -105,6 +112,21 @@ class MainSystemWindow(QMainWindow):
         self.page_asignaciones = QLabel("Sección de Asignaciones (Pendiente)")
         self.page_asignaciones.setAlignment(Qt.AlignCenter)
         self.content_stack.addWidget(self.page_asignaciones)
+    
+    def mostrar_creador_tareas(self):
+        ventana_crear = TaskCreationWindow(self)
+        if ventana_crear.exec_() == TaskCreationWindow.Accepted:
+            datos = ventana_crear.obtener_datos()
+            
+            # Enviar a la API mediante el cliente que ya tienes en MainWindow
+            # Accedemos al widget de tareas que está en el stack
+            dashboard_widget = self.content_stack.widget(0) 
+            
+            # Creamos el endpoint en el API Client o usamos uno genérico
+            exito = dashboard_widget.api.crear_tarea(datos)
+            
+            if exito:
+                dashboard_widget.refresh_data() # Refrescamos la tabla automáticamente
 
 # Para ejecutar
 if __name__ == "__main__":

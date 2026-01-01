@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QHeaderView, QDialog, QMessageBox, QCheckBox, QSpinBox)
 from PyQt5.QtCore import QDate, Qt
 
+from services.api_service import TaskAPIClient # cambiar para generalizar api
+
 # --- Sub-ventana de Impresión ---
 class DialogoImpresion(QDialog):
     def __init__(self, parent=None):
@@ -11,6 +13,7 @@ class DialogoImpresion(QDialog):
         self.setWindowTitle("Opciones de Impresión")
         self.setFixedSize(300, 200)
         self.init_ui()
+        self.refresh_data()
 
     def init_ui(self):
         layout = QVBoxLayout(self)
@@ -45,7 +48,11 @@ class DialogoImpresion(QDialog):
 class IngresosWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.api = TaskAPIClient("http://localhost:5240/api")
+        self.tasks = []
         self.init_ui()
+        self.refresh_data()
+
 
     def init_ui(self):
         layout = QVBoxLayout(self)
@@ -97,6 +104,8 @@ class IngresosWidget(QWidget):
         
         layout.addLayout(header_historial)
 
+        
+
         # --- TABLA DE HISTORIAL ---
         self.tabla_historial = QTableWidget()
         self.tabla_historial.setColumnCount(5)
@@ -106,7 +115,27 @@ class IngresosWidget(QWidget):
         layout.addWidget(self.tabla_historial)
 
         # Cargar algunos datos para probar el buscador
-        self.cargar_datos_ejemplo()
+        #self.cargar_datos_ejemplo()
+
+    def refresh_data(self):
+            """Llama a la API y refresca la tabla"""
+            # En una app real, esto debería ir en un QThread para no congelar la UI
+            self.tasks = self.api.obtener_asignaciones()
+            self.load_data()    
+
+    def load_data(self):
+        self.tabla_historial.setRowCount(0)
+        for row, task in enumerate(self.tasks):
+            self.tabla_historial.insertRow(row)
+            fecha_str = task.fecha.strftime("%Y-%m-%d") if hasattr(task.fecha, "strftime") else str(task.fecha)
+            self.tabla_historial.setItem(row, 0, QTableWidgetItem(fecha_str))
+            self.tabla_historial.setItem(row, 1, QTableWidgetItem(task.usuario))
+            self.tabla_historial.setItem(row, 2, QTableWidgetItem(task.equipo))
+            self.tabla_historial.setItem(row, 3, QTableWidgetItem(task.serial))
+            
+            btn = QPushButton("🖨️ Reimprimir")
+            btn.clicked.connect(lambda ch, r=row: self.reimprimir_desde_tabla(r))
+            self.tabla_historial.setCellWidget(row, 4, btn)
 
     def cargar_datos_ejemplo(self):
         # Datos de prueba para verificar el filtro por serial

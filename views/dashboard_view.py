@@ -22,7 +22,7 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
         # Configuración de la Tabla
         self.table = QTableWidget()
         self.table.setColumnCount(6)
-        self.table.setHorizontalHeaderLabels(["ID", "Título", "Estado", "Prioridad", "Solicitante", "Actualización"])
+        self.table.setHorizontalHeaderLabels(["Ticket", "Título", "Estado", "Prioridad", "Solicitante", "Actualización"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -38,23 +38,6 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
         # En una app real, esto debería ir en un QThread para no congelar la UI
         self.tasks = self.api.obtener_tareas()
         self.load_data()
-
-    '''def load_data(self):
-        self.table.setRowCount(0)
-        for row, task in enumerate(self.tasks):
-            self.table.insertRow(row)
-            self.table.setItem(row, 0, QTableWidgetItem(str(task.id)))
-            self.table.setItem(row, 1, QTableWidgetItem(task.titulo))
-            self.table.setItem(row, 2, QTableWidgetItem(task.estado))
-            self.table.setItem(row, 3, QTableWidgetItem(task.prioridad))
-            self.table.setItem(row, 4, QTableWidgetItem(task.usuario_solicitante))
-            self.table.setItem(row, 5, QTableWidgetItem(task.ultima_actualizacion.strftime("%d/%m/%Y %H:%M")))
-        # --- SOLUCIÓN: INSTALAR FILTRO DE EVENTOS ---
-        # Esto permite que la ventana capture los clics que ocurren DENTRO de la tabla
-        self.table.viewport().installEventFilter(self)
-
-        layout.addWidget(self.table)
-        self.load_data()'''
 
     def eventFilter(self, source, event):
         # Verificamos si el evento es un doble clic en el área de contenido de la tabla
@@ -75,7 +58,7 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
         self.table.setRowCount(0)
         for row, task in enumerate(self.tasks):
             self.table.insertRow(row)
-            self.table.setItem(row, 0, QTableWidgetItem(str(task.id)))
+            self.table.setItem(row, 0, QTableWidgetItem(str(task.ticket)))
             self.table.setItem(row, 1, QTableWidgetItem(task.titulo))
             self.table.setItem(row, 2, QTableWidgetItem(task.estado))
             self.table.setItem(row, 3, QTableWidgetItem(task.prioridad))
@@ -85,8 +68,8 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
     def open_task_detail(self):
         current_row = self.table.currentRow()
         if current_row >= 0:
-            task_id = int(self.table.item(current_row, 0).text())
-            selected_task = next((t for t in self.tasks if t.id == task_id), None)
+            task_ticket = int(self.table.item(current_row, 0).text())
+            selected_task = next((t for t in self.tasks if t.ticket == task_ticket), None)
             if selected_task:
                 detail_window = TaskDetailWindow(selected_task, self)
                 detail_window.exec_()
@@ -98,7 +81,7 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
         detalle_nueva.setWindowTitle("Crear Nueva Tarea")
         
         if detalle_nueva.exec_() == QDialog.Accepted:
-            # Lógica para autoincrementar ID y guardar
-            nueva_tarea.id = max([t.id for t in self.tasks], default=0) + 1
+            # Lógica para autoincrementar ID y guardar                  # ver uso
+            nueva_tarea.ticket = max([t.ticket for t in self.tasks], default=0) + 1
             self.tasks.append(nueva_tarea)
             self.load_data()

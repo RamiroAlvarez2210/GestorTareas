@@ -11,7 +11,7 @@ class Movimiento:
 
 @dataclass
 class Tarea:
-    id: int
+    ticket: int
     titulo: str
     estado: str
     prioridad: str
@@ -19,6 +19,15 @@ class Tarea:
     ultima_actualizacion: datetime
     descripcion: str = ""
     movimientos: List[Movimiento] = field(default_factory=list)
+
+@dataclass
+class Asignacion:
+    #ticket: int
+    fecha: datetime
+    usuario: str
+    equipo: str
+    serial: str
+
 
 # Datos Mock (Falsos) para probar la interfaz
 def get_mock_data():
@@ -30,7 +39,7 @@ def get_mock_data():
     ]
 def crear_tarea_vacia():
     return Tarea(
-        id=0,  # ID temporal
+        ticket=0,  # ID temporal
         titulo="",
         estado="Pendiente",
         prioridad="Baja",

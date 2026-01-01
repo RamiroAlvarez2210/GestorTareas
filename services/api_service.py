@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from models.task_data import Tarea
+from models.task_data import Tarea,Asignacion
 
 class TaskAPIClient:
     def __init__(self, base_url):
@@ -31,7 +31,7 @@ class TaskAPIClient:
                 prioridad_texto = self.mapa_prioridades.get(prioridad_num, "Baja")
 
                 t = Tarea(
-                    id=item.get('id', 0), # Asumimos ID 0 si no viene
+                    ticket=item.get('ticket', 0), # Asumimos ID 0 si no viene
                     titulo=titulo,
                     estado=estado_texto,
                     prioridad=prioridad_texto,
@@ -46,3 +46,41 @@ class TaskAPIClient:
         except Exception as e:
             print(f"Error al obtener tareas de la API: {e}")
             return []
+        
+    def obtener_asignaciones(self):
+        try:
+            response = requests.get(f"{self.base_url}/Asignacion", timeout=5)
+            response.raise_for_status()
+            data = response.json()
+            
+            asignaciones = []
+            for item in data:
+                # Procesar fecha (asumiendo formato ISO string desde la API)
+                fecha_str = item.get('fecha')
+                fecha_dt = datetime.now()
+                if fecha_str:
+                    try:
+                        fecha_dt = datetime.fromisoformat(fecha_str)
+                    except ValueError:
+                        pass
+                
+                asignacion = Asignacion(
+                    fecha=fecha_dt,
+                    usuario=item.get('nombreUsuario') or "Sin Asignar",
+                    equipo=item.get('nombreEquipo') or "Sin Equipo",
+                    serial=item.get('serial') or "S/N"
+                )
+                asignaciones.append(asignacion)
+            return asignaciones
+        except Exception as e:
+            print(f"Error al obtener asignaciones de la API: {e}")
+            return []
+
+    def crear_tarea(self, datos):
+        try:
+            # POST http://localhost:5240/api/tasks
+            response = requests.post(f"{self.base_url}/Tarea", json=datos, timeout=5)
+            return response.status_code in [200, 201]
+        except Exception as e:
+            print(f"Error al crear tarea: {e}")
+            return False
