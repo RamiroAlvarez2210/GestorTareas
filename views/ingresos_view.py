@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QHeaderView, QDialog, QMessageBox, QCheckBox, QSpinBox)
 from PyQt5.QtCore import QDate, Qt
 
+from models.task_data import Asignacion
 from services.api_service import TaskAPIClient # cambiar para generalizar api
 
 # --- Sub-ventana de Impresión ---
@@ -130,8 +131,13 @@ class IngresosWidget(QWidget):
             fecha_str = task.fecha.strftime("%Y-%m-%d") if hasattr(task.fecha, "strftime") else str(task.fecha)
             self.tabla_historial.setItem(row, 0, QTableWidgetItem(fecha_str))
             self.tabla_historial.setItem(row, 1, QTableWidgetItem(task.usuario))
-            self.tabla_historial.setItem(row, 2, QTableWidgetItem(task.equipo))
-            self.tabla_historial.setItem(row, 3, QTableWidgetItem(task.serial))
+            
+            # Accedemos a los datos dentro del objeto Equipo
+            descripcion_equipo = f"{task.equipo.marca} {task.equipo.modelo}".strip()
+            if not descripcion_equipo: descripcion_equipo = task.equipo.nombre
+                
+            self.tabla_historial.setItem(row, 2, QTableWidgetItem(descripcion_equipo))
+            self.tabla_historial.setItem(row, 3, QTableWidgetItem(task.equipo.serial))
             
             btn = QPushButton("🖨️ Reimprimir")
             btn.clicked.connect(lambda ch, r=row: self.reimprimir_desde_tabla(r))
@@ -171,8 +177,23 @@ class IngresosWidget(QWidget):
             return
 
         # Simulación de guardado
-        QMessageBox.information(self, "Éxito", "La asignación se guardó correctamente.")
+        # Convertimos a diccionario y formateamos la fecha a string para evitar errores de serialización JSON
+        datos_asignacion = {
+            "fecha": self.fecha_asignacion.date().toPyDate().isoformat(),
+            "usuario": self.txt_usuario.text(),
+            "marca": self.txt_marca.text(),
+            "modelo": self.txt_modelo.text(),
+            "serial": self.txt_serial.text()
+        }
+        exito = self.api.crear_asignacion(datos_asignacion)
 
+        if exito:
+            QMessageBox.information(self, "Éxito", "La asignación se guardó correctamente.")
+            self.refresh_data() # Recargar la tabla desde la API
+        else:
+            QMessageBox.critical(self, "Error", "Hubo un problema al guardar la asignación.")
+            return
+        # Preguntar si desea imprimir documentos
         respuesta = QMessageBox.question(
             self, "Impresión", "¿Desea imprimir los documentos?",
             QMessageBox.Yes | QMessageBox.No

@@ -11,7 +11,7 @@ class Movimiento:
 
 @dataclass
 class Tarea:
-    ticket: int
+    public_id: str
     titulo: str
     estado: str
     prioridad: str
@@ -21,25 +21,31 @@ class Tarea:
     movimientos: List[Movimiento] = field(default_factory=list)
 
 @dataclass
+class Equipo:
+    nombre: str
+    marca: str
+    modelo: str
+    serial: str
+
+@dataclass
 class Asignacion:
-    #ticket: int
+    public_id: str
     fecha: datetime
     usuario: str
-    equipo: str
-    serial: str
+    equipo: Equipo
 
 
 # Datos Mock (Falsos) para probar la interfaz
 def get_mock_data():
     return [
-        Tarea(1, "Error en Login", "Pendiente", "Alta", "Juan Perez", datetime(2023, 10, 25, 14, 30), "Error al ingresar", 
+        Tarea("mock-1", "Error en Login", "Pendiente", "Alta", "Juan Perez", datetime(2023, 10, 25, 14, 30), "Error al ingresar", 
               [Movimiento("2023-10-25 14:30", "Juan Perez", "Ticket creado")]),
-        Tarea(2, "Actualizar Logo", "En Progreso", "Media", "Maria Lopez", datetime(2023, 10, 26, 9, 00), "Cambiar logo footer", []),
-        Tarea(3, "Backup DB", "Cerrado", "Baja", "Admin", datetime(2023, 10, 24, 18, 00), "Backup mensual", []),
+        Tarea("mock-2", "Actualizar Logo", "En Progreso", "Media", "Maria Lopez", datetime(2023, 10, 26, 9, 00), "Cambiar logo footer", []),
+        Tarea("mock-3", "Backup DB", "Cerrado", "Baja", "Admin", datetime(2023, 10, 24, 18, 00), "Backup mensual", []),
     ]
 def crear_tarea_vacia():
     return Tarea(
-        ticket=0,  # ID temporal
+        public_id="",  # ID temporal
         titulo="",
         estado="Pendiente",
         prioridad="Baja",

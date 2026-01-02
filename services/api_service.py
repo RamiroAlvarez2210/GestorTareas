@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from models.task_data import Tarea,Asignacion
+from models.task_data import Tarea, Asignacion, Equipo
 
 class TaskAPIClient:
     def __init__(self, base_url):
@@ -31,7 +31,7 @@ class TaskAPIClient:
                 prioridad_texto = self.mapa_prioridades.get(prioridad_num, "Baja")
 
                 t = Tarea(
-                    ticket=item.get('ticket', 0), # Asumimos ID 0 si no viene
+                    public_id=item.get('publicId'),
                     titulo=titulo,
                     estado=estado_texto,
                     prioridad=prioridad_texto,
@@ -64,11 +64,51 @@ class TaskAPIClient:
                     except ValueError:
                         pass
                 
+                # --- RESOLUCIÓN DE USUARIO ---
+                usuario_id = item.get('usuarioId')
+                nombre_usuario = "Sin Asignar"
+                
+                if usuario_id:
+                    try:
+                        # Consultamos la API de Usuarios para obtener el nombre real
+                        resp_usr = requests.get(f"{self.base_url}/Usuario/{usuario_id}", timeout=5)
+                        if resp_usr.status_code == 200:
+                            data_usr = resp_usr.json()
+                            nombre_usuario = data_usr.get('nombre') or data_usr.get('nombreUsuario') or usuario_id
+                        else:
+                            nombre_usuario = usuario_id # Si falla, mostramos el ID
+                    except Exception:
+                        nombre_usuario = usuario_id
+
+                # --- RESOLUCIÓN DE EQUIPO ---
+                equipo_id = item.get('equipoId')
+                
+                nombre_eq = "Sin Equipo"
+                marca_eq = ""
+                modelo_eq = ""
+                serial_eq = "S/N"
+                
+                if equipo_id:
+                    try:
+                        # Buscamos el detalle del equipo: serial, marca, modelo
+                        resp_eq = requests.get(f"{self.base_url}/Equipo/{equipo_id}", timeout=5)
+                        if resp_eq.status_code == 200:
+                            data_eq = resp_eq.json()
+                            marca_eq = data_eq.get('marca', '')
+                            modelo_eq = data_eq.get('modelo', '')
+                            serial_eq = data_eq.get('serial', serial_eq)
+                            nombre_eq = data_eq.get('nombre') or f"{marca_eq} {modelo_eq}".strip()
+                    except Exception:
+                        pass 
+
+                # Creamos el objeto Equipo
+                equipo_obj = Equipo(nombre=nombre_eq, marca=marca_eq, modelo=modelo_eq, serial=serial_eq)
+
                 asignacion = Asignacion(
+                    public_id=item.get('publicId'),
                     fecha=fecha_dt,
-                    usuario=item.get('nombreUsuario') or "Sin Asignar",
-                    equipo=item.get('nombreEquipo') or "Sin Equipo",
-                    serial=item.get('serial') or "S/N"
+                    usuario=nombre_usuario,
+                    equipo=equipo_obj
                 )
                 asignaciones.append(asignacion)
             return asignaciones
@@ -83,4 +123,20 @@ class TaskAPIClient:
             return response.status_code in [200, 201]
         except Exception as e:
             print(f"Error al crear tarea: {e}")
+            return False
+        
+    def crear_asignacion(self, datos):
+        try:
+            # Mapeamos los datos del diccionario a la estructura que pide la API
+            payload = {
+                "nombreUsuario": datos.get("usuario"),
+                "marcaEquipo": datos.get("marca"),
+                "modeloEquipo": datos.get("modelo"),
+                "serialEquipo": datos.get("serial"),
+                "fecha": datos.get("fecha")
+            }
+            response = requests.post(f"{self.base_url}/Asignacion/AltaUsuarioEquipo", json=payload, timeout=5)
+            return response.status_code in [200, 201]
+        except Exception as e:
+            print(f"Error al crear asignación: {e}")
             return False

@@ -58,7 +58,7 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
         self.table.setRowCount(0)
         for row, task in enumerate(self.tasks):
             self.table.insertRow(row)
-            self.table.setItem(row, 0, QTableWidgetItem(str(task.ticket)))
+            self.table.setItem(row, 0, QTableWidgetItem(task.public_id))
             self.table.setItem(row, 1, QTableWidgetItem(task.titulo))
             self.table.setItem(row, 2, QTableWidgetItem(task.estado))
             self.table.setItem(row, 3, QTableWidgetItem(task.prioridad))
@@ -68,12 +68,12 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
     def open_task_detail(self):
         current_row = self.table.currentRow()
         if current_row >= 0:
-            task_ticket = int(self.table.item(current_row, 0).text())
-            selected_task = next((t for t in self.tasks if t.ticket == task_ticket), None)
+            task_id = self.table.item(current_row, 0).text()
+            selected_task = next((t for t in self.tasks if t.public_id == task_id), None)
             if selected_task:
                 detail_window = TaskDetailWindow(selected_task, self)
                 detail_window.exec_()
-                self.load_data()
+                self.refresh_data() # Recargar datos de la API por si hubo cambios
 
     def crear_nueva_tarea_rapida(self):
         nueva_tarea = crear_tarea_vacia()
@@ -81,7 +81,5 @@ class MainWindow(QWidget): # Cambiado a QWidget para el diseño de Sidebar
         detalle_nueva.setWindowTitle("Crear Nueva Tarea")
         
         if detalle_nueva.exec_() == QDialog.Accepted:
-            # Lógica para autoincrementar ID y guardar                  # ver uso
-            nueva_tarea.ticket = max([t.ticket for t in self.tasks], default=0) + 1
-            self.tasks.append(nueva_tarea)
-            self.load_data()
+            # Al volver del diálogo (que ya guardó en API), refrescamos la lista completa
+            self.refresh_data()

@@ -10,7 +10,7 @@ class TaskDetailWindow(QDialog):
     def __init__(self, tarea, parent=None):
         super().__init__(parent)
         self.tarea = tarea
-        self.setWindowTitle(f"Detalle de Tarea #{self.tarea.ticket}")
+        self.setWindowTitle(f"Detalle de Tarea #{self.tarea.public_id}")
         self.resize(600, 500)
         self.init_ui()
 
@@ -119,7 +119,7 @@ class TaskDetailWindow(QDialog):
         }
         
         # Llamar a la API (puedes pasar el cliente API desde el padre)
-        exito = self.parent().api.actualizar_tarea(self.tarea.id, datos_actualizados)
+        exito = self.parent().api.actualizar_tarea(self.tarea.public_id, datos_actualizados)
         
         if exito:
             self.accept() # Cierra y refresca
